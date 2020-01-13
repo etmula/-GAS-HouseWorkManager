@@ -1,0 +1,61 @@
+<script>
+  //datepicker
+  var now = new Date();
+  $('.datepicker').datepicker({
+    format: "yyyy-mm-dd",
+    language: 'ja',
+    autoclose: true
+  });
+  
+  $('.datepicker').datepicker("setDate", now.getFullYear()+now.getMonth+now.getDate());
+
+  // Handler when all assets (including images) are loaded
+  $('#Work').find('option.select').wrap('<span>');
+  $('.detail').hide();
+  
+
+  $('#Category').on('change', function(){
+    var category = $(this).val();
+    console.log("category "+category+" was selected");
+    if(category == 'choose'){
+      $('#Work').prop('disabled', true);
+    }else{
+      $('#Work').prop('disabled', false);
+    }
+    $('#Work').find('span option.select').unwrap();
+    $('#Work').find('.select:not(.'+category+')').wrap('<span>');
+    $('#Work').val('仕事名を選択');
+  });
+  
+  $('#Work').on('change', function(){
+    console.log("work selected");
+    var category = $('#Category').val();
+    var work = $('#Work').val();
+    var $detail = $('#'+category+work);
+    var point = $detail.attr('point');
+    $('#Point').attr('value', point);
+    $('.detail').hide();
+    $detail.show();
+  });
+
+  $('input').on('change', function(){
+    //var is_input_date = ($('#Date').val() != undefined);
+    //console.log($('#Date').val());
+    var is_input_user = false;
+    console.log($(".user:checked").length);
+    if($(".user:checked").length > 0){
+      is_input_user = true;
+    }else{
+      is_input_user = false;
+    }
+    //var allow_submit = (is_input_user && is_input_date);
+    //console.log(allow_submit);
+    $('.submit').prop("disabled", !is_input_user);
+  });
+  
+  $('input[type="checkbox"]').on('change', function(){
+    var name = $(this).val();
+    $('#custom_work_user_'+name).prop('checked', $(this).prop("checked"));
+  });
+
+</script>

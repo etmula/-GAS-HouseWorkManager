@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title><?=group_dict['group_name']?></title>
+  </head>
+  <body>
+
+  <main role="main" class="container-fluid">
+  
+    <form method='POST' action='<?=action_url?>'>
+      <input name='data_type' value='submit_work' type='text' hidden>
+      <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
+      <input name='point' id='Point' type='text' value='0' hidden>
+      <input data-provide="datepicker" class="form-control datepicker col-sm-5 my-2 shadow-sm" type="text" name="date" value=""　placeholder="Date" required>
+     <div id='User' class="btn-group-virtical" data-toggle="buttons">
+      <?
+        for(var email in group_dict['member']){
+          var checked = "";
+          if(email == user_email){
+            checked = "checked";
+          }
+          output.append(
+            "<label class='btn btn-outline-info d-block text-left shadow-sm'>"+
+            "<input name='user' value='"+group_dict['member'][email]['name']+"' type='checkbox' autocomplete='off' class='d-inline user' "+checked+">"+
+            "<h5 class='d-inline mx-2'>"+group_dict['member'][email]['name']+"</h5>"+
+            "<h4 class='d-inline mx-5'>"+total_dict[group_dict['member'][email]['name']]+"</h4>"+
+            "</label>"
+          )
+          }
+      ?>
+      </div>
+      <select name='category' id='Category' class="custom-select custom-select-lg my-1 shadow-sm">
+        <option value='choose' selected disabled>部類を選択</option>
+        <?
+          for(var category in work_dict){
+            output.append(
+              "<option value='"+category+"'>"+category+"</option>"
+            )
+          }
+        ?>
+        <option value='option'>システム機能</option>
+      </select>
+      <select name='work' id='Work' value='choose' class="custom-select custom-select-lg my-1 shadow-sm" disabled>
+      <option selected disabled>仕事名を選択</option>
+      <?
+        for(var category in work_dict){
+          output.append
+          for(var name in work_dict[category]){
+            output.append(
+              "<span><option class='select "+category+"' value='"+name+"'>"+name+"</option></span>"
+            )
+          }
+        }
+        ?>
+        <span><option value='add_work' class='select option'>新しい家事を登録</option></span>
+        <span><option value='custom_work' class='select option'>登録されていない家事を実行</option></span>
+      </select>
+      <?
+      for(category in work_dict){
+         for(name in work_dict[category]){
+           output.append(
+             "<div id='"+category+name+"'class='card detail shadow-sm' point='"+work_dict[category][name]['point']+"'>"+
+               "<div class='card-body'>"+
+                 "<h5 class='name "+name+"'>"+name+"</h5>"+
+                 "<h6 name='point' class='point "+work_dict[category][name]['point']+"'>"+work_dict[category][name]['point']+"</h6>"+
+                 "<p  class='description "+work_dict[category][name]['description']+"'>"+work_dict[category][name]['description']+"</p>"+
+                 "<button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>"+
+               "</div>"+
+             "</div>"
+           )
+         }
+       }
+      ?>
+    </form>
+    <div id="optionadd_work" class='card detail shadow-sm'>
+      <div class='card-body'>
+        <div class='card-title'>新しく家事を登録</div>
+        <form method='post' action='<?=action_url?>'>
+          <input name='data_type' value='add_work' type='text' hidden>
+          <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
+          <div class="form-group">
+            <label for='add_work_category'>部類</label>
+            <input name='category' type='text' class='form-control' id='add_work_category' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='add_work_work'>仕事名</label>
+            <input name='work' type='text' class='form-control' id='add_work_work' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='add_work_point'>点数</label>
+            <input name='point' type='number' class='form-control' id='add_work_point' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='add_work_description'>説明</label>
+            <input name='description' type='text' class='form-control' id='add_work_description'>
+            <small class="form-text text-muted"></small>
+          </div>
+          <button class='btn btn-success btn-lg btn-block my-3' type='submit'>登録</button>
+        </form>
+      </div>
+    </div>
+    <div class='card detail shadow-sm' id='optioncustom_work'>
+      <div class='card-body'>
+        <div class='card-title'>登録されていない家事を実行</div>
+        <form method='post' action='<?=action_url?>'>
+          <input name='data_type' value='submit_work' type='text' hidden>
+          <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
+          <?
+            for(var email in group_dict['member']){
+              var checked = "";
+              if(email == user_email){
+                checked = "checked";
+              }
+              output.append(
+                "<input name='user' id='custom_work_user_"+group_dict['member'][email]['name']+"' value='"+group_dict['member'][email]['name']+"' type='checkbox' "+checked+" hidden>"
+              )
+            }
+          ?>
+          <div class="form-group">
+            <label for='custom_work_date'>日付</label>
+            <input data-provide="datepicker" class="form-control datepicker col-sm-5 my-2" type="text" name="date" id='custom_work_date'　placeholder="Date" required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='custom_work_category'>部類</label>
+            <input name='category' type='text' class='form-control' id='custom_work_category' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='custom_work_work'>仕事名</label>
+            <input name='work' type='text' class='form-control' id='custom_work_work' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <div class="form-group">
+            <label for='custom_work_point'>点数</label>
+            <input name='point' type='number' class='form-control' id='custom_work_point' required>
+            <small class="form-text text-muted"></small>
+          </div>
+          <button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>
+        </form>
+      </div>
+    </div>
+    <div class='card my-1'>
+      <div class="card-body row m-1" role="group">
+        <h5 class='carad-title col-12'>Links</h5>
+        <a class="btn btn-primary col m-1" href='<?=action_url?>'>Home</a>
+        <a class="btn btn-secondary col m-1" href='<?=action_url?>?path=history'>History</a>
+        <a class="btn btn-info col m-1" href='<?=action_url?>?path=setting'>Setting</a>
+        <a class="btn btn-success col m-1" href=<?=group_dict['spreadsheet_url']?>>SpreadSheet</a>
+      </div>
+    </div>
+  </main><!-- /.container -->
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  
+  <!-- Bootstrap-datepicker -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.ja.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css">
+  
+  <!-- JS.html -->
+  <?!= HtmlService.createHtmlOutputFromFile('JS').getContent(); ?>
+  </body>
+</html>
