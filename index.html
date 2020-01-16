@@ -41,9 +41,16 @@
       <select name='category' id='Category' class="custom-select custom-select-lg my-1 shadow-sm">
         <option value='choose' selected disabled>部類を選択</option>
         <?
-          for(var category in work_dict){
+          var category_list = [];
+          for(var index = 0;index < work_list.length; index++){
+            if(category_list.indexOf(work_list[index].category) === -1){
+              category_list.push(work_list[index].category);
+            }
+          }
+          Logger.log(category_list);
+          for(var index in category_list){
             output.append(
-              "<option value='"+category+"'>"+category+"</option>"
+              "<option value='"+category_list[index]+"'>"+category_list[index]+"</option>"
             )
           }
         ?>
@@ -51,35 +58,10 @@
       </select>
       <select name='work' id='Work' value='choose' class="custom-select custom-select-lg my-1 shadow-sm" disabled>
       <option selected disabled>仕事名を選択</option>
-      <?
-        for(var category in work_dict){
-          output.append
-          for(var name in work_dict[category]){
-            output.append(
-              "<span><option class='select "+category+"' value='"+name+"'>"+name+"</option></span>"
-            )
-          }
-        }
-        ?>
         <span><option value='add_work' class='select option'>新しい家事を登録</option></span>
         <span><option value='custom_work' class='select option'>登録されていない家事を実行</option></span>
       </select>
-      <?
-      for(category in work_dict){
-         for(name in work_dict[category]){
-           output.append(
-             "<div id='"+category+name+"'class='card detail shadow-sm' point='"+work_dict[category][name]['point']+"'>"+
-               "<div class='card-body'>"+
-                 "<h5 class='name "+name+"'>"+name+"</h5>"+
-                 "<h6 name='point' class='point "+work_dict[category][name]['point']+"'>"+work_dict[category][name]['point']+"</h6>"+
-                 "<p  class='description "+work_dict[category][name]['description']+"'>"+work_dict[category][name]['description']+"</p>"+
-                 "<button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>"+
-               "</div>"+
-             "</div>"
-           )
-         }
-       }
-      ?>
+
     </form>
     <div id="optionadd_work" class='card detail shadow-sm'>
       <div class='card-body'>
@@ -140,7 +122,7 @@
           </div>
           <div class="form-group">
             <label for='custom_work_work'>仕事名</label>
-            <input name='work' type='text' class='form-control' id='custom_work_work' required>
+            <input name='name' type='text' class='form-control' id='custom_work_work' required>
             <small class="form-text text-muted"></small>
           </div>
           <div class="form-group">

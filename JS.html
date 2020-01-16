@@ -8,48 +8,68 @@
   });
   
   $('.datepicker').datepicker("setDate", now.getFullYear()+now.getMonth+now.getDate());
-
-  // Handler when all assets (including images) are loaded
-  $('#Work').find('option.select').wrap('<span>');
+  console.log("test");
   $('.detail').hide();
   
-
   $('#Category').on('change', function(){
     var category = $(this).val();
     console.log("category "+category+" was selected");
     if(category == 'choose'){
       $('#Work').prop('disabled', true);
     }else{
-      $('#Work').prop('disabled', false);
+      $.ajax({
+        type: "POST",
+        url: "",
+        data: {
+        
+        }
+      },
+      success: function(param){
+        var $work = $('#Work');
+        var $detail = $('.detail');
+        $work.empty();
+        $work.append("<option selected disabled>仕事名を選択</option>");
+        var work_list_categolized = work_list.filter((work) => {
+          return (work.category === category);
+        });
+        for(var work in work_list_categolized){
+          $work.append("<option value='work_"+work.row+"'>"+work.name+"</option>");
+          $work.after(
+            "<div id='work_"+work.row+"'class='card detail shadow-sm' point='"work.point+"'>"+
+              "<div class='card-body'>"+
+                "<h5>"+work.name+"</h5>"+
+                "<h6>"+work.point+"</h6>"+
+                "<p>"+work.description+"</p>"+
+                "<button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>"+
+              "</div>"+
+            "</div>"
+          )
+        }
+      });
+      $work.append("<option value='add_work'>新しい家事を登録</option>");
+      $work.append("<option value='custom_work'>登録されていない家事を実行</option>");
     }
-    $('#Work').find('span option.select').unwrap();
-    $('#Work').find('.select:not(.'+category+')').wrap('<span>');
-    $('#Work').val('仕事名を選択');
+    $detail.hide();
+    $work.val('仕事名を選択');
   });
   
   $('#Work').on('change', function(){
     console.log("work selected");
-    var category = $('#Category').val();
-    var work = $('#Work').val();
-    var $detail = $('#'+category+work);
+    var id = $('#Work').val();
+    var $detail = $('#'+id);
     var point = $detail.attr('point');
     $('#Point').attr('value', point);
     $('.detail').hide();
     $detail.show();
   });
 
-  $('input').on('change', function(){
-    //var is_input_date = ($('#Date').val() != undefined);
-    //console.log($('#Date').val());
+  $('input[name="user"]').on('change', function(){
     var is_input_user = false;
-    console.log($(".user:checked").length);
     if($(".user:checked").length > 0){
       is_input_user = true;
     }else{
       is_input_user = false;
     }
-    //var allow_submit = (is_input_user && is_input_date);
-    //console.log(allow_submit);
     $('.submit').prop("disabled", !is_input_user);
   });
   

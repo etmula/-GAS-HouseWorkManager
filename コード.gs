@@ -1,10 +1,60 @@
 var ADMIN_SPREADSHEET_ID = '1evJKaau2XenllewyQ6BJnXT6WqS1wE5WSYFbn4O3eko';
 var ADMIN_SHEET_NAME = 'User';
 var ACTION_URL = 'https://script.google.com/macros/s/AKfycbx-j7R1EuJOlqN2pJ47Y0TKCwTaATLhKuSUgSWKs-p5B7FuRYE/exec';
-var FAVICON_URL = 'https://drive.google.com/uc?id=1gRnc_wLxUpb5iDk5bEeOLhKledHG4Svd&.png';
+
+function Work(param){
+  this.category = param.category;
+  this.name = param.name;
+  this.point = param.point;
+  this.description = param.description;
+  this.lastdate = param.lastdate;
+  this.row = param.row;
+}
+
+Work.get_work_list = function(spreadsheet){
+  var work_list = []; 
+  var sheet = spreadsheet.getSheetByName('work');
+  var values = sheet.getDataRange().getDisplayValues();
+  for(var index = 1; index < values.length; index++){
+    var work = new Work({
+      category: values[index][0],
+      name: values[index][1],
+      point: values[index][2],
+      description: values[index][3],
+      row: index + 1
+    });
+    work_list.push(work);
+  }
+  
+  function compare(a, b) {
+  // Use toUpperCase() to ignore character casing
+    var categoryA = a.category.toUpperCase();
+    var categoryB = b.category.toUpperCase();
+  
+    var comparison = 0;
+    if (categoryA > categoryB) {
+      comparison = 1;
+    } else if (categoryA < categoryB) {
+      comparison = -1;
+    }
+    return comparison;
+  }
+  work_list.sort(compare);
+  Logger.log("work_list");
+  //Logger.log(work_list);
+  return work_list;
+};
+
+Work.prototype.set = function(spreadsheet) {
+  var sheet = spreadsheet.getSheetByName('work');
+  var values = [this.category, this.name, this.point, this.description];
+  if(this.category != undefined){
+    sheet.appendRow(values);
+  }
+  Logger.log("set work");
+};
 
 //サイトアクセス時にHTMLページを渡す
-
 function doGet(e) {
   var html_output;
   var user_email = Session.getActiveUser().getUserLoginId();
@@ -28,6 +78,9 @@ function doGet(e) {
       break;
     case 'setting':
       html_output = get_setting_output(spreadsheet_url);
+      break;
+    case 'work':
+      html_output = get_work_output(spreadsheet);
       break;
     default:
       html_output = get_index_output(spreadsheet, user_email);
@@ -97,11 +150,13 @@ function doPost(e) {
       var user_email = Session.getActiveUser().getUserLoginId();
       var spreadsheet_url = e.parameter.spreadsheet_url;
       var spreadsheet = SpreadsheetApp.openByUrl(spreadsheet_url);
-      var category = e.parameter.category;
-      var work = e.parameter.work;
-      var point = e.parameter.point;
-      var description = e.parameter.description;
-      set_work(spreadsheet, category, work, point, description);
+      var work = new Work({
+        category: category,
+        name: e.parameter.name,
+        point: e.parameter.point,
+        description: e.parameter.description
+      });
+      work.set(spreadsheet);
       html_output = get_index_output(spreadsheet, user_email);
     default:
       break;
@@ -173,12 +228,11 @@ function get_index_output(spreadsheet, user_email){
   var history_list = get_history_list(spreadsheet);
   tpl.group_dict = group_dict;
   tpl.total_dict = get_total_dict(group_dict, history_list);
-  tpl.work_dict = get_work_dict(spreadsheet);
+  tpl.work_list = Work.get_work_list(spreadsheet);
   tpl.action_url = ACTION_URL;
   tpl.user_email = user_email;
   var output = tpl.evaluate();
   output = output.addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  output = output.setFaviconUrl(FAVICON_URL);
   return output;
 }
 
@@ -186,7 +240,7 @@ function get_history_output(spreadsheet){
   var tpl = HtmlService.createTemplateFromFile('history');
   var group_dict = get_group_dict(spreadsheet);
   var history_list = get_history_list(spreadsheet);
-  tpl.group_dict = group_dict
+  tpl.group_dict = group_dict;
   tpl.history_list = history_list;
   tpl.total_dict = get_total_dict(group_dict, history_list);
   tpl.action_url = ACTION_URL;
@@ -200,6 +254,17 @@ function get_setting_output(spreadsheet_url, message){
   tpl.spreadsheet_url = spreadsheet_url;
   tpl.action_url = ACTION_URL;
   tpl.message = message;
+  var output = tpl.evaluate();
+  output = output.addMetaTag('viewport', 'width=device-width, initial-scale=1');
+  return output;
+}
+
+function get_work_output(spreadsheet){
+  var tpl = HtmlService.createTemplateFromFile('work');
+  var group_dict = get_group_dict(spreadsheet);
+  tpl.group_dict = group_dict;
+  tpl.action_url = ACTION_URL;
+  tpl.work_list = Work.get_work_list(spreadsheet);
   var output = tpl.evaluate();
   output = output.addMetaTag('viewport', 'width=device-width, initial-scale=1');
   return output;
