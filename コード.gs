@@ -85,7 +85,7 @@ function doPost(e) {
         'user': e.parameters.user.join(),
         'point': e.parameter.point
       };
-      set_history(spreadsheet, recode);
+      set_history(spreadsheet_url, recode);
       html_output = get_history_output(spreadsheet);
       break;
     case 'delete':
@@ -106,7 +106,7 @@ function doPost(e) {
     default:
       break;
   }
-  return html_output;
+  //return html_output;
 }
 
 function auto_submit() {
@@ -132,14 +132,15 @@ function auto_submit() {
           'point': values[3][col]
         }
         Logger.log(recode);
-        set_history(spreadsheet, recode);
+        set_history(spreadsheet_url, recode);
       }
       done_url.push(spreadsheet_url);
     }
   }
 }
 
-function set_work(spreadsheet, category, work, point, description){
+function set_work(spreadsheet_url, category, work, point, description){
+  var spreadsheet = SpreadsheetApp.openByUrl(spreadsheet_url);
   var sheet = spreadsheet.getSheetByName('work');
   var values = [category, work, point, description];
   if(category != undefined){
@@ -148,7 +149,8 @@ function set_work(spreadsheet, category, work, point, description){
   Logger.log("set work");
 }
 
-function set_history(spreadsheet, recode){
+function set_history(spreadsheet_url, recode){
+  var spreadsheet = SpreadsheetApp.openByUrl(spreadsheet_url);
   var sheet = spreadsheet.getSheetByName('history');
   var values = [
     recode["date"],
@@ -160,11 +162,11 @@ function set_history(spreadsheet, recode){
   sheet.appendRow(values);
 }
 
-function delete_history(spreadsheet, index){
+function delete_history(spreadsheet, row){
   var sheet = spreadsheet.getSheetByName('history');
-  sheet.deleteRow(parseInt(index) + 1);
+  sheet.deleteRow(row);
   Logger.log("delete history");
-  Logger.log(index + 1);
+  Logger.log(row);
 }
 
 function get_index_output(spreadsheet, user_email){
@@ -173,7 +175,7 @@ function get_index_output(spreadsheet, user_email){
   var history_list = get_history_list(spreadsheet);
   tpl.group_dict = group_dict;
   tpl.total_dict = get_total_dict(group_dict, history_list);
-  tpl.work_dict = get_work_dict(spreadsheet);
+  tpl.work_list = get_work_list(spreadsheet, history_list);
   tpl.action_url = ACTION_URL;
   tpl.user_email = user_email;
   var output = tpl.evaluate();
@@ -257,14 +259,14 @@ function get_history_list(spreadsheet){
   var history_list = []; 
   var sheet = spreadsheet.getSheetByName('history');
   var values = sheet.getDataRange().getDisplayValues();
-  for(var row = values.length - 1; row > 0; row--){
-    var date = values[row][0];
-    var category = values[row][1];
-    var work = values[row][2];
-    var name = values[row][3];
-    var point = values[row][4];
+  for(var index = values.length - 1; index > 0; index--){
+    var date = values[index][0];
+    var category = values[index][1];
+    var work = values[index][2];
+    var name = values[index][3];
+    var point = values[index][4];
     history_list.push({
-      'index': row,
+      'row': index+1,
       'date': date,
       'category': category,
       'work': work,
@@ -277,31 +279,45 @@ function get_history_list(spreadsheet){
   return history_list;
 }
 
-function get_work_dict(spreadsheet){
-  var work_dict = {}; 
+function get_work_list(spreadsheet, history_list){
+  var work_list = [];
   var sheet = spreadsheet.getSheetByName('work');
   var values = sheet.getDataRange().getDisplayValues();
+  var date = new Date();
   for(var index = 1; index < values.length; index++){
     var category = values[index][0];
     var name = values[index][1];
     var point = values[index][2];
     var description = values[index][3];
-    if(!(category in work_dict)){
-      work_dict[category] = {};
+    var row = index + 1;
+    var history = undefined;
+    for(var i = 0; i < history_list.length; i++){
+      var recode = history_list[i];
+      if(recode.category === category && recode.work === name){
+        history = recode.name + ":" + recode.date;
+        break;
+      }
     }
-    work_dict[category][name] = {'point': point,'description': description};
+    if(history === undefined){
+      history = "実行履歴なし"
+    }
+    work_list.push({'category': category, 'name': name, 'point': point, 'description': description, 'row': row, 'history': history});
   }
-  Logger.log("work_dict");
-  return work_dict;
+  Logger.log("work_list");
+  Logger.log(work_list);
+  return work_list;
 }
 
 function get_total_dict(group_dict, history_list){
   var total_dict = {};
+  //各ユーザーのアドレスから名前を取得してキーとし，合計点を0に設定
   for(var email in group_dict['member']){
     total_dict[group_dict['member'][email]['name']] = 0;
   }
+  //正規表現オブジェクト("名前1|名前2...", gフラグ:複数の値の配列を返す)を生成
   var regexp = new RegExp(Object.keys(total_dict).join('|'), 'g');
   history_list.forEach(function(recode){
+    // recodeの実行者の配列を取得
     var names = recode['name'].match(regexp);
     names.forEach(function(name){
       var point = parseInt(recode['point'], 10) / names.length;
@@ -312,7 +328,7 @@ function get_total_dict(group_dict, history_list){
     total_dict[name] = Math.round(total_dict[name]);
   }
   Logger.log("total_dict");
-  //Logger.log(total_dict);
+  Logger.log(total_dict);
   return total_dict;
 }
 
@@ -320,3 +336,19 @@ function include(filename) {
   return HtmlService.createHtmlOutputFromFile(filename).getContent();
 }
 
+function get_history_list_by_url(spreadsheet_url){
+  var spreadsheet = SpreadsheetApp.openByUrl(spreadsheet_url);
+  var history_list = get_history_list(spreadsheet);
+  return history_list;
+}
+
+function delete_history_by_url(spreadsheet_url, row){
+  var spreadsheet = SpreadsheetApp.openByUrl(spreadsheet_url);
+  delete_history(spreadsheet, row);
+}
+
+function set_historys(spreadsheet_url, recodes){
+  for(var recode of recodes){
+    set_history(spreadsheet_url, recode);
+  }
+}

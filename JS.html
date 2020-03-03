@@ -6,56 +6,224 @@
     language: 'ja',
     autoclose: true
   });
+    
   
+  
+  //初期設定
   $('.datepicker').datepicker("setDate", now.getFullYear()+now.getMonth+now.getDate());
+  $('.presubmit_work').hide();
 
-  // Handler when all assets (including images) are loaded
-  $('#Work').find('option.select').wrap('<span>');
-  $('.detail').hide();
+  //実行ユーザー変更
+  $('input[name="user"][type="checkbox"]').on('change', function(){
+    check_submittable();
+  });
+
+
+  function check_submittable(){
+    //提出条件確認
+    var is_input_user = false;
+    var is_exist_work = false;
+    if($(".user:checked").length > 0){
+      is_input_user = true;
+    }
+    if($('.presubmit_work').attr('count') != '0'){
+      is_exist_work = true;
+    }
+    var submittable = is_input_user && is_exist_work;
+    console.log('check submittable user:'+is_input_user+' work:'+is_exist_work+' check:'+submittable);
+    if(submittable){
+      $('.presubmit_work').show();
+    }else{
+      $('.presubmit_work').hide();
+    }
+    
+  }
   
-
+  //履歴表示
+  $('.show_history_modal, .refresh_history_modal').on('click', function(){
+    var spreadsheet_url = $('input[name="spreadsheet_url"]').val();
+    google.script.run.withSuccessHandler(show_history_modal).get_history_list_by_url(spreadsheet_url);
+  });
+  
+  function show_history_modal(history_list){
+    console.log(history_list);
+    var $historyModal = $('#historyModal');
+    $historyModal.find('#history-modal-list').empty();
+    for(var index in history_list){
+       $historyModal.find('#history-modal-list').append(
+         '<li class="list-group-item row pr-0">'+
+           '<span class="col-2 align-middle p-0">'+history_list[index]['date'].substr(6,5)+'</span>'+
+           '<span class="col-5 align-middle d-inline-block text-truncate">'+history_list[index]['work']+'</span>'+
+           '<span class="col-3 align-middle d-inline-block text-truncate p-0">'+history_list[index]['name']+'</span>'+
+           '<button class="col-2 btn btn-danger btn-sm delete_work" row="'+history_list[index]['row']+'">削除</button>'+
+         '</li>'
+       );
+    }
+    $('.delete_work').on('click', function(){
+      var spreadsheet_url = $('input[name="spreadsheet_url"]').val();
+      var row = $(this).attr('row');
+      console.log(row);
+      google.script.run.delete_history_by_url(spreadsheet_url, row);
+      $(this).parent().remove();
+    });
+    $historyModal.modal('show');
+  }
+  
+  
+  //仕事詳細表示
+  $('.show_work_modal').on('click', function(){
+    var name = $(this).parent().attr('name');
+    var category = $(this).parent().attr('category');
+    var description = $(this).parent().attr('description');
+    var point = $(this).parent().attr('point');
+    var history = $(this).parent().attr('history');
+    var $workModal = $('#workModal');
+    $workModal.find('.modal-title').html(name+'<span class="badge badge-info">'+history+'</span>');
+    $workModal.find('.modal-body').empty();
+    $workModal.find('.modal-body').append('<pre>'+description+'</pre>');
+    $workModal.find('.modal-body').append('<h5>'+point+'点</h5>');
+    $workModal.modal('show');
+  });
+  
+  //仕事追加表示
+  $('.show_make_work_modal').on('click', function(){
+    $('#makeworkModal').modal('show');
+  })
+  
+  //カスタム仕事実行表示
+  $('.show_custom_work_modal').on('click', function(){
+    var users = [];
+    $(".user:checked").each(function(){
+      users.push($(this).val());
+    });
+    $('#customworkModal').find('.modal-body').find('#custom_work_users').text(users);
+    $('#customworkModal').modal('show');
+  })
+  
+  //仕事チェックボックス操作
+  $('.work_checkbox').on('change', function(){
+    var before_add_queues = Number($('.presubmit_work').attr('count'));
+    var is_checked = $(this).prop('checked');
+    var count;
+    console.log('checkbox changed' + is_checked);
+    if(is_checked === true){
+      count = before_add_queues + 1;
+    }else{
+      count = before_add_queues - 1
+    }
+    $('.presubmit_work').attr('count', count);
+    $('.presubmit_work').text('確認画面へ(選択中:'+count+')');
+    check_submittable();
+  });
+  
+  //仕事確認
+  $('.presubmit_work').on('click', function(){
+    var $submitModal = $('#submitModal');
+    var users = [];
+    var date;
+    var total_points = 0;
+    
+    $(".user:checked").each(function(){
+      users.push($(this).val());
+    });
+    
+    date = $('input[name="date"]').val();
+    
+    $submitModal.find('.modal-body').find('.list-group').empty();
+    $('.work_checkbox:checked').each(function(){
+       $submitModal.find('.modal-body').find('.list-group').append(
+         '<li class="list-group-item">'+
+           $(this).parent().attr('name')+
+           '<span class="float-right">'+
+             $(this).parent().attr('point')+'点'+
+           '</span>'+
+         '</li>'
+       );
+       var point = Number($(this).parent().attr('point'))
+       total_points = total_points + point;
+    });
+    $submitModal.find('.modal-body').find('.list-group').append('<li class="list-group-item text-right">合計：'+total_points+'点</li>');
+    
+    $submitModal.find('.modal-title').text(date+' '+users);
+    
+    $submitModal.modal('show');
+  });
+  
+  //仕事提出
+  $('.submit_work').on('click', function(){
+    var $submitModal = $('#submitModal');
+    var users = [];
+    var date;
+    var works = [];
+    var spreadsheet_url = $('input[name="spreadsheet_url"]').val();
+    var host_url = $('input[name="host_url"]').val();
+    
+    $(".user:checked").each(function(){
+      users.push($(this).val());
+    });
+    
+    date = $('input[name="date"]').val();
+    
+    $('.work_checkbox:checked').each(function(){
+      var work = {
+        'date': date,
+        'category': $(this).parent().attr('category'),
+        'work': $(this).parent().attr('name'),
+        'user': users.join(','),
+        'point': $(this).parent().attr('point')
+      };
+      works.push(work);
+    });
+    console.log(works);
+    google.script.run.set_historys(spreadsheet_url, works);
+    reload();
+    $('#submitModal').modal('hide');
+  });
+  
+  //仕事作成
+  $('#make_work').on('click', function(){
+    var spreadsheet_url = $('input[name="spreadsheet_url"]').val();
+    var category = $('#make_work_category').val();
+    var work = $('#make_work_name').val();
+    var point = $('#make_work_point').val();
+    var description = $('#make_work_description').val();
+    google.script.run.set_work(spreadsheet_url, category, work, point, description);
+  });
+  
+  //カスタム仕事実行
+  $('#custom_work').on('click', function(){
+    var users = [];
+    var spreadsheet_url = $('input[name="spreadsheet_url"]').val();
+    $(".user:checked").each(function(){
+      users.push($(this).val());
+    });
+    var work = {
+      'date': $('#custom_work_date').val(),
+      'category': $('#custom_work_category').val(),
+      'work': $('#custom_work_work').val(),
+      'user': users.join(','),
+      'point': $('#custom_work_point').val()
+    };
+    console.log(work);
+    google.script.run.set_history(spreadsheet_url, work);
+  });
+  
+  //categoryフィルター
   $('#Category').on('change', function(){
     var category = $(this).val();
     console.log("category "+category+" was selected");
-    if(category == 'choose'){
-      $('#Work').prop('disabled', true);
-    }else{
-      $('#Work').prop('disabled', false);
+    $('.work_item').show();
+    if(category != "all"){
+      $('.work_info[category!="'+category+'"]').parent().hide();
     }
-    $('#Work').find('span option.select').unwrap();
-    $('#Work').find('.select:not(.'+category+')').wrap('<span>');
-    $('#Work').val('仕事名を選択');
   });
   
-  $('#Work').on('change', function(){
-    console.log("work selected");
-    var category = $('#Category').val();
-    var work = $('#Work').val();
-    var $detail = $('#'+category+work);
-    var point = $detail.attr('point');
-    $('#Point').attr('value', point);
-    $('.detail').hide();
-    $detail.show();
-  });
-
-  $('input').on('change', function(){
-    //var is_input_date = ($('#Date').val() != undefined);
-    //console.log($('#Date').val());
-    var is_input_user = false;
-    console.log($(".user:checked").length);
-    if($(".user:checked").length > 0){
-      is_input_user = true;
-    }else{
-      is_input_user = false;
-    }
-    //var allow_submit = (is_input_user && is_input_date);
-    //console.log(allow_submit);
-    $('.submit').prop("disabled", !is_input_user);
-  });
+  function reload(){
+    $('.work_checkbox:checked').prop("checked", false);
+    $('.presubmit_work').attr('count', 0);
+    $('.presubmit_work').hide();
+  }
   
-  $('input[type="checkbox"]').on('change', function(){
-    var name = $(this).val();
-    $('#custom_work_user_'+name).prop('checked', $(this).prop("checked"));
-  });
-
+  
+  
 </script>

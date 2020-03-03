@@ -14,153 +14,239 @@
   </head>
   <body>
 
-  <main role="main" class="container-fluid">
-  
-    <form method='POST' action='<?=action_url?>'>
-      <input name='data_type' value='submit_work' type='text' hidden>
-      <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
-      <input name='point' id='Point' type='text' value='0' hidden>
-      <input data-provide="datepicker" class="form-control datepicker col-sm-5 my-2 shadow-sm" type="text" name="date" value=""　placeholder="Date" required>
-     <div id='User' class="btn-group-virtical" data-toggle="buttons">
-      <?
-        for(var email in group_dict['member']){
+  <main role="main" class="container-fluid mx-0">
+    <input name='spreadsheet_url' value='<?=group_dict['spreadsheet_url']?>' hidden>
+    <input name='host_url' value='<?=ACTION_URL?>' hidden>
+
+
+     <div id='User' class="btn-group w-100 fixed-top" data-toggle="buttons">
+      <?for(var email in group_dict['member']){
           var checked = "";
           if(email == user_email){
             checked = "checked";
-          }
-          output.append(
-            "<label class='btn btn-outline-info d-block text-left shadow-sm'>"+
-            "<input name='user' value='"+group_dict['member'][email]['name']+"' type='checkbox' autocomplete='off' class='d-inline user' "+checked+">"+
-            "<h5 class='d-inline mx-2'>"+group_dict['member'][email]['name']+"</h5>"+
-            "<h4 class='d-inline mx-5'>"+total_dict[group_dict['member'][email]['name']]+"</h4>"+
-            "</label>"
-          )
-          }
-      ?>
+          }?>
+            <label class='btn btn-light d-block text-left shadow-sm'>
+              <div class="custom-control custom-checkbox">
+                <input id='user_checkbox_<?=group_dict['member'][email]['name']?>' name='user' value='<?=group_dict['member'][email]['name']?>' type='checkbox' autocomplete='off' class='align-items-center d-inline user custom-control-input' <?=checked?>>
+                <label class="custom-control-label" for="user_checkbox_<?=group_dict['member'][email]['name']?>">
+                  <h5 class='d-inline'><?=group_dict['member'][email]['name']?></h5>
+                  <span class="badge badge-info"><?=total_dict[group_dict['member'][email]['name']]?></span>
+                  <input type="checkbox" class="custom-control-input" id="customCheck1">
+                </label>
+              </div>
+              
+            </label>
+      <?}?>
+        
       </div>
-      <select name='category' id='Category' class="custom-select custom-select-lg my-1 shadow-sm">
-        <option value='choose' selected disabled>部類を選択</option>
-        <?
-          for(var category in work_dict){
-            output.append(
-              "<option value='"+category+"'>"+category+"</option>"
-            )
-          }
-        ?>
-        <option value='option'>システム機能</option>
-      </select>
-      <select name='work' id='Work' value='choose' class="custom-select custom-select-lg my-1 shadow-sm" disabled>
-      <option selected disabled>仕事名を選択</option>
-      <?
-        for(var category in work_dict){
-          output.append
-          for(var name in work_dict[category]){
-            output.append(
-              "<span><option class='select "+category+"' value='"+name+"'>"+name+"</option></span>"
-            )
-          }
-        }
-        ?>
-        <span><option value='add_work' class='select option'>新しい家事を登録</option></span>
-        <span><option value='custom_work' class='select option'>登録されていない家事を実行</option></span>
-      </select>
-      <?
-      for(category in work_dict){
-         for(name in work_dict[category]){
-           output.append(
-             "<div id='"+category+name+"'class='card detail shadow-sm' point='"+work_dict[category][name]['point']+"'>"+
-               "<div class='card-body'>"+
-                 "<h5 class='name "+name+"'>"+name+"</h5>"+
-                 "<h6 name='point' class='point "+work_dict[category][name]['point']+"'>"+work_dict[category][name]['point']+"</h6>"+
-                 "<p  class='description "+work_dict[category][name]['description']+"'>"+work_dict[category][name]['description']+"</p>"+
-                 "<button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>"+
-               "</div>"+
-             "</div>"
-           )
-         }
-       }
-      ?>
-    </form>
-    <div id="optionadd_work" class='card detail shadow-sm'>
-      <div class='card-body'>
-        <div class='card-title'>新しく家事を登録</div>
-        <form method='post' action='<?=action_url?>'>
-          <input name='data_type' value='add_work' type='text' hidden>
-          <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
-          <div class="form-group">
-            <label for='add_work_category'>部類</label>
-            <input name='category' type='text' class='form-control' id='add_work_category' required>
-            <small class="form-text text-muted"></small>
-          </div>
-          <div class="form-group">
-            <label for='add_work_work'>仕事名</label>
-            <input name='work' type='text' class='form-control' id='add_work_work' required>
-            <small class="form-text text-muted"></small>
-          </div>
-          <div class="form-group">
-            <label for='add_work_point'>点数</label>
-            <input name='point' type='number' class='form-control' id='add_work_point' required>
-            <small class="form-text text-muted"></small>
-          </div>
-          <div class="form-group">
-            <label for='add_work_description'>説明</label>
-            <input name='description' type='text' class='form-control' id='add_work_description'>
-            <small class="form-text text-muted"></small>
-          </div>
-          <button class='btn btn-success btn-lg btn-block my-3' type='submit'>登録</button>
-        </form>
-      </div>
-    </div>
-    <div class='card detail shadow-sm' id='optioncustom_work'>
-      <div class='card-body'>
-        <div class='card-title'>登録されていない家事を実行</div>
-        <form method='post' action='<?=action_url?>'>
-          <input name='data_type' value='submit_work' type='text' hidden>
-          <input name='spreadsheet_url' type='text' value='<?=group_dict['spreadsheet_url']?>' hidden>
-          <?
-            for(var email in group_dict['member']){
-              var checked = "";
-              if(email == user_email){
-                checked = "checked";
+      
+      
+      
+      <div class='input-group mt-5'>
+        <input data-provide="datepicker" class="form-control datepicker" type="text" name="date" value=""　placeholder="Date" required>
+        <select name='category' id='Category' class="custom-select">
+          <option value='all' selected>全て</option>
+            <?
+            var categorys = [];
+            for(var index in work_list){
+              if(categorys.indexOf(work_list[index]['category']) === -1){
+                categorys.push(work_list[index]['category']);
               }
-              output.append(
-                "<input name='user' id='custom_work_user_"+group_dict['member'][email]['name']+"' value='"+group_dict['member'][email]['name']+"' type='checkbox' "+checked+" hidden>"
-              )
             }
-          ?>
-          <div class="form-group">
-            <label for='custom_work_date'>日付</label>
-            <input data-provide="datepicker" class="form-control datepicker col-sm-5 my-2" type="text" name="date" id='custom_work_date'　placeholder="Date" required>
-            <small class="form-text text-muted"></small>
+            for(var index in categorys){?>
+                "<option value='<?=categorys[index]?>'><?=categorys[index]?></option>
+            <?}?>
+        </select>
+      </div>
+      
+      
+      
+      <ul class='list-group mt-1' id='submit_list'>
+        <?for(var index in work_list){?>
+          <div class="list-group-item row work_item">
+            <div class="custom-control custom-checkbox col pr-0 work_info" 
+              name='<?=work_list[index]['name']?>' 
+              category='<?=work_list[index]['category']?>' 
+              description='<?=work_list[index]['description']?>'
+              point='<?=work_list[index]['point']?>'
+              history='<?=work_list[index]['history']?>'
+             >
+              <input type="checkbox" class="custom-control-input work_checkbox align-items-center text-left col-1" id='customCheck<?=work_list[index]['row']?>'>
+              <label class="custom-control-label col-9" for="customCheck<?=work_list[index]['row']?>">
+                <span class='col-3 d-inline-block text-truncate px-0'><?=work_list[index]['category']?></span>
+                <span class="col-8 d-inline-block text-truncate"><?=work_list[index]['name']?></span>
+              </label>
+              <button type="button" class="col-2 btn btn-sm btn-success d-inline-block show_work_modal">
+                詳細
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for='custom_work_category'>部類</label>
-            <input name='category' type='text' class='form-control' id='custom_work_category' required>
-            <small class="form-text text-muted"></small>
+       <?}?>
+      </ul>
+      
+    
+
+    <div class="modal fade" id="workModal" tabindex="-1" role="dialog" aria-labelledby="workModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="workModalCenterTitle">仕事名</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
           </div>
-          <div class="form-group">
-            <label for='custom_work_work'>仕事名</label>
-            <input name='work' type='text' class='form-control' id='custom_work_work' required>
-            <small class="form-text text-muted"></small>
+          <div class="modal-body">
           </div>
-          <div class="form-group">
-            <label for='custom_work_point'>点数</label>
-            <input name='point' type='number' class='form-control' id='custom_work_point' required>
-            <small class="form-text text-muted"></small>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
           </div>
-          <button class='btn btn-success btn-lg btn-block my-3 submit' type='submit'>実行</button>
-        </form>
+        </div>
       </div>
     </div>
+    
+    <div class="modal fade" id="submitModal" tabindex="-1" role="dialog" aria-labelledby="submitModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="submitModalCenterTitle">最終確認</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <ul class='list-group list-group-flush'>
+            
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">キャンセル</button>
+            <button type="button" class="btn btn-success submit_work">実行</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="makeworkModal" tabindex="-1" role="dialog" aria-labelledby="makeworkModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="makeworkModalCenterTitle">新しく家事を登録</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label for='make_work_category'>部類</label>
+              <input name='category' type='text' class='form-control' id='make_work_category' required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='make_work_name'>仕事名</label>
+              <input name='work' type='text' class='form-control' id='make_work_name' required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='make_work_point'>点数</label>
+              <input name='point' type='number' class='form-control' id='make_work_point' required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='make_work_description'>説明</label>
+              <textarea name='description' type='text' class='form-control' id='make_work_description'></textarea>
+              <small class="form-text text-muted"></small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id='make_work' class="btn btn-success" data-dismiss="modal">作成</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="customworkModal" tabindex="-1" role="dialog" aria-labelledby="customworkModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="customworkModalCenterTitle">登録されていない家事を実行</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h5 id='custom_work_users'>
+            
+            </h5>
+            <div class="form-group">
+              <label for='custom_work_date'>日付</label>
+              <input data-provide="datepicker" class="form-control datepicker col-sm-5 my-2" type="text" name="date" id='custom_work_date'　placeholder="Date" required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='custom_work_category'>部類</label>
+              <input name='category' type='text' class='form-control' id='custom_work_category' required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='custom_work_work'>仕事名</label>
+              <input name='work' type='text' class='form-control' id='custom_work_work' required>
+              <small class="form-text text-muted"></small>
+            </div>
+            <div class="form-group">
+              <label for='custom_work_point'>点数</label>
+              <input name='point' type='number' class='form-control' id='custom_work_point' required>
+              <small class="form-text text-muted"></small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id='custom_work' class="btn btn-success" data-dismiss="modal">実行</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="historyModalCenterTitle">履歴</h5>
+            <button class='refresh_history_modal btn btn-primary btn-sm mx-1'>更新</button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <ul class='list-group list-group-flush' id='history-modal-list'>
+              <li></li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class='card my-1'>
+      <div class="card-body row m-1" role="group">
+        <h5 class='carad-title col-12'>システム機能</h5>
+          <button type="button" class="btn btn-secondary show_make_work_modal col m-1">新しく家事を登録</button>
+          <button type="button" class="btn btn-secondary show_custom_work_modal col m-1">登録されていない家事を実行</button>
+          <button type="button" class="btn btn-secondary show_history_modal col m-1">履歴</button>
+      </div>
+    </div>
+
     <div class='card my-1'>
       <div class="card-body row m-1" role="group">
         <h5 class='carad-title col-12'>Links</h5>
-        <a class="btn btn-primary col m-1" href='<?=action_url?>'>Home</a>
-        <a class="btn btn-secondary col m-1" href='<?=action_url?>?path=history'>History</a>
         <a class="btn btn-info col m-1" href='<?=action_url?>?path=setting'>Setting</a>
-        <a class="btn btn-success col m-1" href=<?=group_dict['spreadsheet_url']?>>SpreadSheet</a>
+        <a class="btn btn-success col m-1" href='<?=group_dict['spreadsheet_url']?>'>SpreadSheet</a>
       </div>
     </div>
+    
+    <button class='btn btn-success shadow-sm presubmit_work fixed-bottom w-100' count='0'>
+      確認画面へ(選択中:0)
+    </button>
   </main><!-- /.container -->
 
   <!-- Optional JavaScript -->
