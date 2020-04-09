@@ -77,8 +77,10 @@
     var description = $(this).parent().attr('description');
     var point = $(this).parent().attr('point');
     var history = $(this).parent().attr('history');
+    var alert_badge = $(this).parent().attr('alert_badge');
+    var elapsed = $(this).parent().attr('elapsed');
     var $workModal = $('#workModal');
-    $workModal.find('.modal-title').html(name+'<span class="badge badge-info">'+history+'</span>');
+    $workModal.find('.modal-title').html(name+'<span class="badge badge-info">'+history+'</span>'+'<span class="badge badge-info">'+alert_badge+'</span>');
     $workModal.find('.modal-body').empty();
     $workModal.find('.modal-body').append('<pre>'+description+'</pre>');
     $workModal.find('.modal-body').append('<h5>'+point+'点</h5>');

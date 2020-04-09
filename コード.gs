@@ -146,7 +146,7 @@ function set_work(spreadsheet_url, category, work, point, description){
   if(category != undefined){
     sheet.appendRow(values);
   }
-  Logger.log("set work");
+  //Logger.log("set work");
 }
 
 function set_history(spreadsheet_url, recode){
@@ -165,8 +165,8 @@ function set_history(spreadsheet_url, recode){
 function delete_history(spreadsheet, row){
   var sheet = spreadsheet.getSheetByName('history');
   sheet.deleteRow(row);
-  Logger.log("delete history");
-  Logger.log(row);
+  //Logger.log("delete history");
+  //Logger.log(row);
 }
 
 function get_index_output(spreadsheet, user_email){
@@ -251,7 +251,7 @@ function get_group_dict(spreadsheet) {
   for(email in member_dict){
     group_dict['member'][email] = member_dict[email];
   }
-  Logger.log("group_dict");
+  //Logger.log("group_dict");
   return group_dict;
 }
 
@@ -274,8 +274,8 @@ function get_history_list(spreadsheet){
       'point': point
     });
   }
-  Logger.log("history_list");
-  Logger.log(history_list);
+  //Logger.log("history_list");
+  //Logger.log(history_list);
   return history_list;
 }
 
@@ -289,22 +289,53 @@ function get_work_list(spreadsheet, history_list){
     var name = values[index][1];
     var point = values[index][2];
     var description = values[index][3];
+    var alert = values[index][4];
     var row = index + 1;
     var history = undefined;
+    var elapsed = undefined;
+    var isalert = undefined;
+    var alert_badge = undefined;
+    var alert_badge_short = undefined;
     for(var i = 0; i < history_list.length; i++){
       var recode = history_list[i];
       if(recode.category === category && recode.work === name){
-        history = recode.name + ":" + recode.date;
+        var recode_date = new Date(recode.date);
+        elapsed = Math.floor((date.getTime() - recode_date.getTime()) / (24 * 60 * 60 * 1000));
+        history = recode.name + ":" + elapsed + '日前';
         break;
       }
+    }
+    if(alert == false && alert !== 0){
+      isalert = false;
+      alert_badge = 'アラート設定なし';
+      alert_badge_short = elapsed + '/';
+    }else if(history === undefined){
+      isalert = false;
+      alert_badge = '実行履歴なし' + '/' + alert;
+      alert_badge_short = '/' + alert;
+    }else if(elapsed < alert){
+      isalert = false;
+      alert_badge = elapsed + '日経過/' + alert + '日毎';
+      alert_badge_short = elapsed + '/' + alert;
+    }else{
+      isalert = true;
+      alert_badge = elapsed + '日経過/' + alert + '日毎';
+      alert_badge_short = elapsed + '/' + alert;
     }
     if(history === undefined){
       history = "実行履歴なし"
     }
-    work_list.push({'category': category, 'name': name, 'point': point, 'description': description, 'row': row, 'history': history});
+    var work = {'category': category, 'name': name, 'point': point, 'description': description, 'isalert': isalert, 'row': row, 'history': history, 'alert_badge': alert_badge, 'alert_badge_short': alert_badge_short};
+    Logger.log(elapsed + '-'+alert);
+    if(isalert){
+      work_list.unshift(work);
+    }else{
+      work_list.push(work);
+    }
+    
   }
-  Logger.log("work_list");
-  Logger.log(work_list);
+  //Logger.log("work_list");
+  //Logger.log(work_list);
   return work_list;
 }
 
@@ -327,8 +358,8 @@ function get_total_dict(group_dict, history_list){
   for(name in total_dict){
     total_dict[name] = Math.round(total_dict[name]);
   }
-  Logger.log("total_dict");
-  Logger.log(total_dict);
+  //Logger.log("total_dict");
+  //Logger.log(total_dict);
   return total_dict;
 }
 

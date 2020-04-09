@@ -63,17 +63,27 @@
       
       <ul class='list-group mt-1' id='submit_list'>
         <?for(var index in work_list){?>
-          <div class="list-group-item row work_item">
+          <?if(work_list[index]['isalert']){ ?>
+            <div class="list-group-item list-group-item-danger row work_item">
+          <? }else{ ?>
+            <div class="list-group-item row work_item">
+          <? } ?>
             <div class="custom-control custom-checkbox col pr-0 work_info" 
               name='<?=work_list[index]['name']?>' 
               category='<?=work_list[index]['category']?>' 
               description='<?=work_list[index]['description']?>'
               point='<?=work_list[index]['point']?>'
               history='<?=work_list[index]['history']?>'
+              alert_badge='<?=work_list[index]['alert_badge']?>'
              >
               <input type="checkbox" class="custom-control-input work_checkbox align-items-center text-left col-1" id='customCheck<?=work_list[index]['row']?>'>
               <label class="custom-control-label col-9" for="customCheck<?=work_list[index]['row']?>">
-                <span class='col-3 d-inline-block text-truncate px-0'><?=work_list[index]['category']?></span>
+                <?if(work_list[index]['isalert']){ ?>
+                  <span class='col-3 d-inline-block text-truncate px-0'><?=work_list[index]['alert_badge_short']?></span>
+                <? }else{ ?>
+                  <span class='col-3 d-inline-block text-truncate px-0'><?=work_list[index]['category']?></span>
+                <? } ?>
+                
                 <span class="col-8 d-inline-block text-truncate"><?=work_list[index]['name']?></span>
               </label>
               <button type="button" class="col-2 btn btn-sm btn-success d-inline-block show_work_modal">
