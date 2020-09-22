@@ -1,1 +1,2 @@
-# HouseWOrkManager
+# HouseWorkManager
+GoogleAppsScriptを用いたHouseWorkManager
